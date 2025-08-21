@@ -17,6 +17,7 @@ export default function BrowserApp() {
   const [isMinimized, setIsMinimized] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(true);
   const [urlInput, setUrlInput] = React.useState('');
+  const [iframeKey, setIframeKey] = React.useState(0);
 
   const navigateTo = (page: string, isExternal: boolean = false) => {
     if (isExternal) {
@@ -29,9 +30,6 @@ export default function BrowserApp() {
     setHistoryIndex(newHistory.length - 1);
     setCurrentPage(page);
     setUrlInput(page === 'home' ? '' : page);
-    if (page === 'portfolio') {
-      router.push('/apps/reaPortfolio'); // Updated route
-    }
   };
 
   const goBack = () => {
@@ -40,9 +38,6 @@ export default function BrowserApp() {
       const newPage = history[historyIndex - 1];
       setCurrentPage(newPage);
       setUrlInput(newPage === 'home' ? '' : newPage);
-      if (newPage === 'portfolio') {
-        router.push('/apps/reaPortfolio'); // Updated route
-      }
     }
   };
 
@@ -52,18 +47,11 @@ export default function BrowserApp() {
       const newPage = history[historyIndex + 1];
       setCurrentPage(newPage);
       setUrlInput(newPage === 'home' ? '' : newPage);
-      if (newPage === 'portfolio') {
-        router.push('/apps/reaPortfolio'); // Updated route
-      }
     }
   };
 
   const reload = () => {
-    if (currentPage === 'portfolio') {
-      router.push('/apps/reaPortfolio?reload=' + Date.now()); // Updated route
-    }
-    setCurrentPage(currentPage + '?reload=' + Date.now());
-    setTimeout(() => setCurrentPage(currentPage), 100);
+    setIframeKey((prev) => prev + 1);
   };
 
   const goHome = () => {
@@ -232,9 +220,13 @@ export default function BrowserApp() {
                 </div>
               </div>
             ) : currentPage === 'portfolio' ? (
-              <Link href="/apps/reaPortfolio" className="text-white text-lg">
-                Loading Portfolio...
-              </Link>
+              <iframe
+                key={iframeKey}
+                src="https://reabot6.netlify.app"
+                title="Portfolio"
+                className="w-full h-full border-none"
+                allowFullScreen
+              />
             ) : (
               <div className="text-white text-lg">Loading {currentPage}...</div>
             )}
