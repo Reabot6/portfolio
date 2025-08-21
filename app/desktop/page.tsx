@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,10 +14,10 @@ import { useRouter } from 'next/navigation';
 
 const desktopIcons = [
   { name: 'Terminal', icon: 'https://cdn-icons-png.flaticon.com/512/2933/2933245.png', route: '/apps/reaTerminal' },
-  { name: 'Browser', icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968764.png', route: '/apps/reaBrowser' },
+  { name: 'Browser', icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968764.png', route: '/apps/reaBrowser' }, // Points to BrowserApp
   { name: 'Games', icon: 'https://cdn-icons-png.flaticon.com/512/3781/3781904.png', route: '/apps/reaGames' },
   { name: 'Pictures', icon: 'https://cdn-icons-png.flaticon.com/512/716/716784.png', route: '/apps/reaPictures' },
-  { name: 'Videos', icon: 'https://cdn-icons-png.flaticon.com/512/716/716769.png', route: '/apps/reaVideos' }
+  { name: 'Videos', icon: 'https://cdn-icons-png.flaticon.com/512/716/716769.png', route: '/apps/reaVideos' },
 ];
 
 const taskbarApps = [
@@ -28,31 +28,48 @@ const taskbarApps = [
   { name: 'LinkedIn', icon: 'https://cdn-icons-png.flaticon.com/512/174/174857.png', route: '/apps/reaLinkedIn', running: false },
   { name: 'Phone2', icon: 'https://cdn-icons-png.flaticon.com/512/724/724664.png', route: '/apps/reaPhone2', running: false },
   { name: 'Mail', icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png', route: '/apps/reaMail', running: true },
-  { name: 'GitHub', icon: 'https://cdn-icons-png.flaticon.com/512/733/733553.png', route: '/apps/reaGitHub', running: false }
+  { name: 'GitHub', icon: 'https://cdn-icons-png.flaticon.com/512/733/733553.png', route: '/apps/reaGitHub', running: false },
 ];
 
 export default function DesktopPage() {
   const [showStartMenu, setShowStartMenu] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentTime, setCurrentTime] = useState(format(new Date(), 'h:mm a')); // Set initial values
+  const [currentDate, setCurrentDate] = useState(format(new Date(), 'MMM d')); // Set initial values
+  const [isMounted, setIsMounted] = useState(false); // Track client-side mounting
   const router = useRouter();
+
+  // Update time and date only on the client side
+  useEffect(() => {
+    setIsMounted(true); // Mark as mounted on client
+    const updateTime = () => {
+      setCurrentTime(format(new Date(), 'h:mm a'));
+      setCurrentDate(format(new Date(), 'MMM d'));
+    };
+    updateTime(); // Initial update
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []);
 
   const handleIconClick = (route: string) => {
     router.push(route);
   };
 
-  const currentTime = format(new Date(), 'h:mm a');
-  const currentDate = format(new Date(), 'MMM d');
+  // Prevent rendering of dynamic content until mounted
+  if (!isMounted) {
+    return <div>Loading...</div>; // Static fallback UI
+  }
 
   return (
     <TooltipProvider>
-      <div 
+      <div
         className="h-screen w-screen relative overflow-hidden"
         style={{
           backgroundImage: 'url(https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundRepeat: 'no-repeat',
         }}
       >
         {/* Desktop Icons */}
@@ -66,7 +83,7 @@ export default function DesktopPage() {
               onClick={() => handleIconClick(icon.route)}
             >
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <div className="w-12 h-12 flex items-center justify-center">
                     <img src={icon.icon} alt={icon.name} className="w-10 h-10" />
                   </div>
@@ -75,16 +92,15 @@ export default function DesktopPage() {
                   <p>{icon.name}</p>
                 </TooltipContent>
               </Tooltip>
-              <span className="text-white text-xs text-center drop-shadow-lg font-medium">
-                {icon.name}
-              </span>
+              <span className="text-white text-xs text-center drop-shadow-lg font-medium">{icon.name}</span>
             </motion.div>
           ))}
         </div>
 
         {/* Activate Windows Watermark */}
         <div className="absolute bottom-20 right-4 opacity-50 text-white text-sm pointer-events-none">
-          Activate Windows<br />
+          Activate Windows
+          <br />
           <span className="text-xs">Go to Settings to activate Windows.</span>
         </div>
 
@@ -93,18 +109,14 @@ export default function DesktopPage() {
           {/* Start Button */}
           <div className="flex items-center space-x-2">
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <motion.button
                   className="p-2 hover:bg-white/10 rounded-md"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowStartMenu(true)}
                 >
-                  <img 
-                    src="https://cdn-icons-png.flaticon.com/512/732/732221.png" 
-                    alt="Start" 
-                    className="w-6 h-6"
-                  />
+                  <img src="https://cdn-icons-png.flaticon.com/512/732/732221.png" alt="Start" className="w-6 h-6" />
                 </motion.button>
               </TooltipTrigger>
               <TooltipContent>
@@ -118,7 +130,7 @@ export default function DesktopPage() {
             {taskbarApps.map((app, index) => (
               <div key={`${app.name}-${index}`} className="relative">
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <motion.button
                       className="relative p-2 hover:bg-white/10 rounded-md flex flex-col items-center"
                       whileHover={{ scale: 1.05 }}
@@ -144,8 +156,8 @@ export default function DesktopPage() {
             <Popover>
               <PopoverTrigger>
                 <Tooltip>
-                  <TooltipTrigger>
-                    <motion.button 
+                  <TooltipTrigger asChild>
+                    <motion.button
                       className="p-1 hover:bg-white/10 rounded"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -165,11 +177,8 @@ export default function DesktopPage() {
             <Popover>
               <PopoverTrigger>
                 <Tooltip>
-                  <TooltipTrigger>
-                    <motion.button 
-                      className="p-1 hover:bg-white/10 rounded"
-                      whileHover={{ scale: 1.05 }}
-                    >
+                  <TooltipTrigger asChild>
+                    <motion.button className="p-1 hover:bg-white/10 rounded" whileHover={{ scale: 1.05 }}>
                       <img src="https://cdn-icons-png.flaticon.com/512/664/664883.png" alt="Battery" className="w-4 h-4" />
                     </motion.button>
                   </TooltipTrigger>
@@ -186,11 +195,8 @@ export default function DesktopPage() {
             <Popover>
               <PopoverTrigger>
                 <Tooltip>
-                  <TooltipTrigger>
-                    <motion.button 
-                      className="p-1 hover:bg-white/10 rounded"
-                      whileHover={{ scale: 1.05 }}
-                    >
+                  <TooltipTrigger asChild>
+                    <motion.button className="p-1 hover:bg-white/10 rounded" whileHover={{ scale: 1.05 }}>
                       <img src="https://cdn-icons-png.flaticon.com/512/565/565422.png" alt="Notifications" className="w-4 h-4" />
                     </motion.button>
                   </TooltipTrigger>
@@ -205,7 +211,7 @@ export default function DesktopPage() {
             </Popover>
 
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <motion.button
                   className="text-white text-xs p-2 hover:bg-white/10 rounded text-center leading-tight"
                   whileHover={{ scale: 1.02 }}
@@ -235,11 +241,8 @@ export default function DesktopPage() {
               >
                 <div className="p-4 space-y-4">
                   {/* Search Bar */}
-                  <Input 
-                    placeholder="Type here to search"
-                    className="w-full bg-white/50 border-none"
-                  />
-                  
+                  <Input placeholder="Type here to search" className="w-full bg-white/50 border-none" />
+
                   {/* Pinned Apps */}
                   <div>
                     <h3 className="text-sm font-medium text-gray-800 mb-2">Pinned</h3>
@@ -293,11 +296,8 @@ export default function DesktopPage() {
                     <Popover>
                       <PopoverTrigger>
                         <Tooltip>
-                          <TooltipTrigger>
-                            <motion.button 
-                              className="p-2 hover:bg-white/20 rounded-md"
-                              whileHover={{ scale: 1.05 }}
-                            >
+                          <TooltipTrigger asChild>
+                            <motion.button className="p-2 hover:bg-white/20 rounded-md" whileHover={{ scale: 1.05 }}>
                               <img src="https://cdn-icons-png.flaticon.com/512/1828/1828427.png" alt="Power" className="w-6 h-6" />
                             </motion.button>
                           </TooltipTrigger>
@@ -317,10 +317,7 @@ export default function DesktopPage() {
                   </div>
                 </div>
               </motion.div>
-              <div 
-                className="absolute inset-0 bg-black/20" 
-                onClick={() => setShowStartMenu(false)}
-              />
+              <div className="absolute inset-0 bg-black/20" onClick={() => setShowStartMenu(false)} />
             </div>
           )}
         </AnimatePresence>
@@ -328,12 +325,7 @@ export default function DesktopPage() {
         {/* Calendar Modal */}
         <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
           <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-md">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border-none"
-            />
+            <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="rounded-md border-none" />
           </DialogContent>
         </Dialog>
       </div>
