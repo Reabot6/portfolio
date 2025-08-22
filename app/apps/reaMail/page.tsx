@@ -28,7 +28,7 @@ export default function MailApp() {
             className="bg-white/20 border-white/30 text-white hover:bg-white/30"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Desktop
+            Back to Desktop bro
           </Button>
         </CardContent>
       </Card>
